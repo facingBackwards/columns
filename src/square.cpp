@@ -4,10 +4,10 @@
 
 using namespace std;
 
-square::square(int c)
+square::square(int cols, int c)
 {
 	setRandColour(c);
-	//setPos(x,y);
+	setPos(10 + SQUARE_SIZE * (rand() % cols),10);
 }
 
 QRectF square::boundingRect() const

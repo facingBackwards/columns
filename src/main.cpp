@@ -1,6 +1,5 @@
 #include <QApplication>
 #include "columnsGame.h"
-//#define SQUARE_SIZE 20
 
 int main(int argc, char *argv[])
 {

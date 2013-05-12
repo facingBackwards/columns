@@ -12,7 +12,7 @@ class square : public QGraphicsItem
 
 		void setRandColour(int c);
 	public:
-		square(int c = 6);//number of colour choices
+		square(int cols, int c = 6);//number of colour choices
 		QRectF boundingRect() const;
 		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 };
