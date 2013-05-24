@@ -24,6 +24,7 @@ void square::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 void square::setRandColour(int c)
 {
 	int x = rand() % c;
+	intColour = x;
 	switch (x)
 	{
 		case 0:
