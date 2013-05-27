@@ -7,7 +7,7 @@ using namespace std;
 square::square(int cols, int c)
 {
 	setRandColour(c);
-	setPos(10 + SQUARE_SIZE * (rand() % cols),10);
+	setPos((int)SQUARE_SIZE/2 + SQUARE_SIZE * (rand() % cols),(int)SQUARE_SIZE/2);
 }
 
 QRectF square::boundingRect() const

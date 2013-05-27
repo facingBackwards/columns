@@ -2,6 +2,7 @@
 #define COLUMNS_GAME_H
 #include <QtGui>
 #include "square.h"
+#include "settings.h"
 
 class columnsGame : public QMainWindow
 {
@@ -22,17 +23,27 @@ class columnsGame : public QMainWindow
 	void addSquareToGrid(square *current);
 	int checkMatches();
 	void removeMatches();
+	void collapseMatches();
 
+	//controls
+	void keyPressEvent(QKeyEvent *key);
+
+	//functions to check for matches around square i
 	int checkVer(int i);
 	int checkHor(int i);
 	int checkUDiag(int i);
 	int checkDDiag(int i);
 
+	void showGrid(); //debug function to show positions of squares
+
 	public:
-		columnsGame(int w, int h, int c = 6);
-		int currentScore;
+		columnsGame(int w, int h, int c = GAME_COLOURS);
+		//int currentScore;
 		void addSquare();
-		void lowerSquare(square* current);
+		void lowerSquare(square* current, int dist = 1);
+		void moveSquare(square* current, int dir);
+		void dropSquare(square* current);
+		void lowerPointer(int i, int dist = 1);
 		void endGame();
 	public slots:
 		void gravity();

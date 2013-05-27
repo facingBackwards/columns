@@ -3,11 +3,10 @@
 #include <typeinfo>
 #include <list>
 
-#define DEBUG (0)
 using namespace std;
 columnsGame::columnsGame(int w, int h, int c)
 {
-	currentScore = 0;
+	//currentScore = 0;
 
 	//rows = h; cols = w;
 	dim[0] = w; dim[1] = h;
@@ -25,11 +24,14 @@ columnsGame::columnsGame(int w, int h, int c)
 	view = new QGraphicsView(scene);
 	setGeometry(2000,200,20 + dim[0]*SQUARE_SIZE, 20 + dim[1]*SQUARE_SIZE);
 	setCentralWidget(view);
+	//grabKeyboard();
+	//setEnabled(true);
+	setFocus();
 
 	addSquare();
 
 	connect(delay, SIGNAL(timeout()), this, SLOT(gravity()));
-	delay->start(50);
+	delay->start(GAME_SPEED);
 }
 
 void columnsGame::setupDisplay()
@@ -45,6 +47,7 @@ void columnsGame::addSquare()
 
 void columnsGame::gravity()
 {
+	int scoreChange = 0;
 	if (newSquare->getY() < dim[1]-colHeights[newSquare->getX()] - 1)
 	{
 		lowerSquare(newSquare);
@@ -52,16 +55,48 @@ void columnsGame::gravity()
 	else
 	{
 		addSquareToGrid(newSquare);
-		score += checkMatches();
-		cout << "score: " << score << endl;
-		removeMatches();
+		scoreChange = checkMatches();
+		score += scoreChange;
+		if (scoreChange)
+		{
+			removeMatches();
+			//collapseMatches();
+		}
 		addSquare();
 	}
 }
 
-void columnsGame::lowerSquare(square *current)
+void columnsGame::lowerSquare(square *current, int dist)
 {
-	current->setPos(current->pos().x(), current->pos().y() + SQUARE_SIZE);
+	current->setPos(current->pos().x(), current->pos().y() + SQUARE_SIZE*dist);
+}
+
+void columnsGame::moveSquare(square *current, int dir) //+ve is right, <0 left
+{
+	if (current->getX()<dim[0] && dir > 0 && colHeights[current->getX() + 1] < dim[1] - current->getY())
+	{
+		//move right
+		current->setPos(current->pos().x() + SQUARE_SIZE, current->pos().y());
+	}
+	else if (current->getX()>0 && dir <=0 && colHeights[current->getX() - 1] < dim[1] - current->getY())
+	{
+		//move left
+		current->setPos(current->pos().x() - SQUARE_SIZE, current->pos().y());
+	}
+}
+
+void columnsGame::dropSquare(square* current)
+{
+	lowerSquare(current, dim[1] - colHeights[current->getX()] - current->getY() - 1);
+}
+
+void columnsGame::lowerPointer(int i, int dist)
+{
+	if (dist > 0)
+	{
+		grid[i+dist*dim[0]] = grid[i];
+		grid[i] = 0;
+	}
 }
 
 void columnsGame::addSquareToGrid(square *current)
@@ -74,6 +109,7 @@ void columnsGame::addSquareToGrid(square *current)
 		cout << "height is " << colHeights[current->getX()] << endl;
 		endGame();
 	}
+	newSquare = 0;
 	return;
 }
 
@@ -123,12 +159,16 @@ int columnsGame::checkMatches()
 			//cout << "hello world" << endl;
 		}
 	}
+	if (scoreInc)
+	{
+		removeMatches();
+		scoreInc += checkMatches();
+	}
 	return scoreInc;
 }
 
 int columnsGame::checkHor(int i)
 {
-	if DEBUG { cout << "check Hor"<< endl;}
 	if (grid[i-1] != NULL && grid[i+1] != NULL)
 	{
 		if ((grid[i-1]->getIntColour() == grid[i]->getIntColour()) && (grid[i+1]->getIntColour() == grid[i]->getIntColour()))
@@ -196,9 +236,72 @@ void columnsGame::removeMatches()
 		if (matched[i] == 1)
 		{
 			scene->removeItem(grid[i]);
+			//scene->addItem(grid[i]);
+			//scene->removeItem(grid[i]);
 			delete grid[i];
 			grid[i] = 0;
 			matched[i] = 0;
+		}
+	}
+	collapseMatches();
+}
+
+void columnsGame::collapseMatches()
+{
+	int tmpColHeight = 0;
+	int tmpToDrop = 0;
+	//char pause;
+	//cin >> pause;
+	for (int i = 0; i < dim[0]; i++)
+	{
+		tmpToDrop = 0;
+		tmpColHeight = 0;
+		for (int j = dim[1] -1; j > 0; j--)
+		{
+			//cout << i << "  " << j << endl;
+			if (grid[i+dim[0]*j] != NULL)
+			{
+				tmpColHeight++;
+				lowerSquare(grid[i+dim[0]*j], tmpToDrop);
+				lowerPointer(i+dim[0]*j, tmpToDrop);
+			}
+			else
+			{
+				tmpToDrop++;
+			}
+		}
+		//cout << "height of column: " << tmpColHeight << endl;
+		colHeights[i] = tmpColHeight;
+	}
+	//showGrid();
+	//cin >> pause;
+	return;
+}
+
+void columnsGame::keyPressEvent(QKeyEvent *k)
+{
+	//Qt::Key keyIn = k;//->key();
+	switch (k->key())
+	{
+		case Qt::Key_Left:
+		{
+			moveSquare(newSquare, -1);
+			//cout << "hello Left"<< endl;
+			break;
+		}
+		case Qt::Key_Right:
+		{
+			moveSquare(newSquare, 1);
+			//cout << "hello Right"<< endl;
+			break;
+		}
+		case Qt::Key_Down:
+		{
+			dropSquare(newSquare);
+		}
+		default:
+		{
+			return;
 		}
 	}
 }
@@ -213,3 +316,25 @@ void columnsGame::endGame()
 	//for (int i = dim[1]; i >0; i++)
 	//{
 		//if
+
+void columnsGame::showGrid()
+{
+	cout << "_____" << endl;
+	for (int i = 0; i < dim[1]; i++)
+	{
+		cout << '|';
+		for (int j = 0; j < dim[0]; j++)
+		{
+			if (grid[j+dim[0]*i] != NULL)
+			{
+				cout<<grid[j+dim[0]*i]->getIntColour();
+			}
+			else
+			{
+				cout << ' ';
+			}
+		}
+		cout << '|' << endl;
+	}
+	cout << "^^^^^^^^" << endl;
+}
