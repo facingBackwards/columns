@@ -17,6 +17,7 @@ class columnsGame : public QMainWindow
 	square *newSquare;
 	int* matched; //to store queue of squares to be dropped
 	int score;
+	bool match;
 	//int rows, cols;
 
 	void setupDisplay();

@@ -2,11 +2,13 @@
 #include <iostream>
 #include <typeinfo>
 #include <list>
+#include <time.h>
 
-using namespace std;
+//using namespace std;
 columnsGame::columnsGame(int w, int h, int c)
 {
 	//currentScore = 0;
+	match = false;
 
 	//rows = h; cols = w;
 	dim[0] = w; dim[1] = h;
@@ -48,20 +50,21 @@ void columnsGame::addSquare()
 void columnsGame::gravity()
 {
 	int scoreChange = 0;
-	if (newSquare->getY() < dim[1]-colHeights[newSquare->getX()] - 1)
-	{
+	if (newSquare != 0 && newSquare->getY() < dim[1]-colHeights[newSquare->getX()] - 1) {
 		lowerSquare(newSquare);
+		return;
 	}
-	else
-	{
+	if (match == false) {
 		addSquareToGrid(newSquare);
-		scoreChange = checkMatches();
-		score += scoreChange;
-		if (scoreChange)
-		{
-			removeMatches();
-			//collapseMatches();
-		}
+	}
+	match = false;
+	scoreChange = checkMatches();
+	score += scoreChange;
+	if (scoreChange)
+	{
+		removeMatches();
+		match = true;
+	} else {
 		addSquare();
 	}
 }
@@ -102,11 +105,10 @@ void columnsGame::lowerPointer(int i, int dist)
 void columnsGame::addSquareToGrid(square *current)
 {
 	grid[current->getX() + dim[0]*current->getY()] = current;
-//	cout << typeid(current).name() << "  " << current->getX() + dim[0]*current->getY() << "  " << current << endl;
 	colHeights[current->getX()]++;
 	if (colHeights[current->getX()] == dim[1])
 	{
-		cout << "height is " << colHeights[current->getX()] << endl;
+	//	std::cout << "height is " << colHeights[current->getX()] << "\n";
 		endGame();
 	}
 	newSquare = 0;
@@ -162,7 +164,8 @@ int columnsGame::checkMatches()
 	if (scoreInc)
 	{
 		removeMatches();
-		scoreInc += checkMatches();
+		//match = true;
+//		scoreInc += checkMatches();
 	}
 	return scoreInc;
 }
@@ -235,10 +238,8 @@ void columnsGame::removeMatches()
 	{
 		if (matched[i] == 1)
 		{
-			scene->removeItem(grid[i]);
-			//scene->addItem(grid[i]);
-			//scene->removeItem(grid[i]);
-			delete grid[i];
+			square* s = grid[i];
+			delete s;
 			grid[i] = 0;
 			matched[i] = 0;
 		}
@@ -250,15 +251,12 @@ void columnsGame::collapseMatches()
 {
 	int tmpColHeight = 0;
 	int tmpToDrop = 0;
-	//char pause;
-	//cin >> pause;
 	for (int i = 0; i < dim[0]; i++)
 	{
 		tmpToDrop = 0;
 		tmpColHeight = 0;
 		for (int j = dim[1] -1; j > 0; j--)
 		{
-			//cout << i << "  " << j << endl;
 			if (grid[i+dim[0]*j] != NULL)
 			{
 				tmpColHeight++;
@@ -270,29 +268,23 @@ void columnsGame::collapseMatches()
 				tmpToDrop++;
 			}
 		}
-		//cout << "height of column: " << tmpColHeight << endl;
 		colHeights[i] = tmpColHeight;
 	}
-	//showGrid();
-	//cin >> pause;
 	return;
 }
 
 void columnsGame::keyPressEvent(QKeyEvent *k)
 {
-	//Qt::Key keyIn = k;//->key();
 	switch (k->key())
 	{
 		case Qt::Key_Left:
 		{
 			moveSquare(newSquare, -1);
-			//cout << "hello Left"<< endl;
 			break;
 		}
 		case Qt::Key_Right:
 		{
 			moveSquare(newSquare, 1);
-			//cout << "hello Right"<< endl;
 			break;
 		}
 		case Qt::Key_Down:
@@ -308,33 +300,29 @@ void columnsGame::keyPressEvent(QKeyEvent *k)
 
 void columnsGame::endGame()
 {
-	cout << "end of game" <<endl;
+	std::cout << "end of game, score: " << score << "\n";
+	delay->stop();
 	return;
 }
-//int columnsGame::getColumnHeight(int col)
-//{
-	//for (int i = dim[1]; i >0; i++)
-	//{
-		//if
 
 void columnsGame::showGrid()
 {
-	cout << "_____" << endl;
+	std::cout << "_____" << "\n";
 	for (int i = 0; i < dim[1]; i++)
 	{
-		cout << '|';
+		std::cout << '|';
 		for (int j = 0; j < dim[0]; j++)
 		{
 			if (grid[j+dim[0]*i] != NULL)
 			{
-				cout<<grid[j+dim[0]*i]->getIntColour();
+				std::cout<<grid[j+dim[0]*i]->getIntColour();
 			}
 			else
 			{
-				cout << ' ';
+				std::cout << ' ';
 			}
 		}
-		cout << '|' << endl;
+		std::cout << '|' << "\n";
 	}
-	cout << "^^^^^^^^" << endl;
+	std::cout << "^^^^^^^^" << "\n";
 }
